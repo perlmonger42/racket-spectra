@@ -1,4 +1,4 @@
-#lang jsonic
+#lang spectra
 // a line comment
 [
   @$ 'null $@,

@@ -1,4 +1,4 @@
 #lang brag
-jsonic-program : (jsonic-char | jsonic-sexp)*
-jsonic-char    : CHAR-TOK
-jsonic-sexp    : SEXP-TOK
+spectra-program : (spectra-char | spectra-sexp)*
+spectra-char    : CHAR-TOK
+spectra-sexp    : SEXP-TOK
