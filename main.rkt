@@ -1,4 +1,4 @@
 #lang br/quicklang
 (module reader br
-  (require "reader.rkt")
+  (require spectra/reader)
   (provide read-syntax))

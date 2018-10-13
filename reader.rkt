@@ -1,5 +1,5 @@
 #lang br/quicklang
-(require "tokenizer.rkt" "parser.rkt" racket/contract)
+(require spectra/tokenizer spectra/parser racket/contract)
 
 (provide (contract-out
           [read-syntax (any/c input-port? . -> . syntax?)] ))
