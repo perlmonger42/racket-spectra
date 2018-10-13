@@ -18,13 +18,22 @@
   (check-false (spectra-token? 42)) )
 
 (define (make-tokenizer port)
+  (port-count-lines! port)
   (define (next-token)
     (define spectra-lexer
       (lexer
        [(from/to "//" "\n") (next-token)]
        [(from/to "@$" "$@")
-        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
-       [any-char (token 'CHAR-TOK lexeme)]))
+        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@")
+               #:position (+ (pos lexeme-start) 2)
+               #:line (line lexeme-start)
+               #:column (+ (col lexeme-start) 2)
+               #:span (- (pos lexeme-end) (pos lexeme-start) 4))]
+       [any-char (token 'CHAR-TOK lexeme
+                        #:position (pos lexeme-start)
+                        #:line (line lexeme-start)
+                        #:column (col lexeme-start)
+                        #:span (- (pos lexeme-end) (pos lexeme-start)))]))
     (spectra-lexer port))
   next-token)
 
@@ -34,8 +43,25 @@
    empty)
   (check-equal?
    (apply-tokenizer-maker make-tokenizer "@$ (+ 6 7) $@")
-   (list (token-struct 'SEXP-TOK " (+ 6 7) " #f #f #f #f #f)))
+   (list (token 'SEXP-TOK " (+ 6 7) "
+                #:position 3
+                #:line 1
+                #:column 2
+                #:span 9)))
   (check-equal?
    (apply-tokenizer-maker make-tokenizer "hi")
-   (list (token-struct 'CHAR-TOK "h" #f #f #f #f #f)
-         (token-struct 'CHAR-TOK "i" #f #f #f #f #f))))
+   (list (token 'CHAR-TOK "h"
+                #:position 1
+                #:line 1
+                #:column 0
+                #:span 1)
+         (token 'CHAR-TOK "i"
+                #:position 2
+                #:line 1
+                #:column 1
+                #:span 1)))
+  (check-equal?
+   (apply-tokenizer-maker make-tokenizer "//x\ny\nz")
+   (list (token-struct 'CHAR-TOK "y" 5 2 0 1 #f)
+         (token-struct 'CHAR-TOK "\n" 6 2 1 1 #f)
+         (token-struct 'CHAR-TOK "z" 7 3 0 1 #f))))
