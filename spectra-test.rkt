@@ -1,6 +1,7 @@
 #lang spectra
 // a line comment
 [
+  "JSON string", 42, {"a": null},
   @$ 'null $@,
   @$ (* 6 7) $@,
   @$ (= 2 (+ 1 1)) $@,
