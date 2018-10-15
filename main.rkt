@@ -10,5 +10,7 @@
          (dynamic-require 'spectra/colorer 'color-spectra)]
         [(drracket:indentation)
          (dynamic-require 'spectra/indenter 'indent-spectra)]
+        [(drracket:toolbar-buttons)
+         (dynamic-require 'spectra/buttons 'button-list)]
         [else default]))
     handle-query))
