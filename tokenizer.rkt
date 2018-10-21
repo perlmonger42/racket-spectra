@@ -1,5 +1,5 @@
 #lang br/quicklang
-(require brag/support racket/contract)
+(require brag/support racket/contract spectra/lexer)
 
 (provide
  (contract-out
@@ -8,23 +8,9 @@
 (module+ test
   (require rackunit))
 
-(define (spectra-token? x)
-  (or (eof-object? x) (srcloc-token? x)))
-
-(module+ test
-  (check-true (spectra-token? eof))
-  (check-true (spectra-token? (srcloc-token 'hi (srcloc #f 1 0 1 2)))))
-
 (define (make-tokenizer port)
   (port-count-lines! port)
-  (define (next-token)
-    (define spectra-lexer
-      (lexer-srcloc
-       [(from/to "//" "\n") (token 'COMMENT lexeme #:skip? #t)]
-       [(from/to "@$" "$@")
-        (token 'SEXP-TOK (trim-ends "@$" lexeme "$@"))]
-       [any-char (token 'CHAR-TOK lexeme)]))
-    (spectra-lexer port))
+  (define (next-token) (spectra-lexer port))
   next-token)
 
 (module+ test
