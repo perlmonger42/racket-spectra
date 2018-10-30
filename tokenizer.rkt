@@ -5,8 +5,9 @@
  (contract-out
   [make-tokenizer (input-port? . -> . (-> spectra-token?))] ) )
 
-(define (make-tokenizer port)
+(define (make-tokenizer port [path #f])
   (port-count-lines! port)
+  (lexer-file-path path)
   (define (next-token) (spectra-lexer port))
   next-token)
 
