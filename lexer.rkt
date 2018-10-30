@@ -17,8 +17,8 @@
   (check-true (spectra-token? (srcloc-token 'hi (srcloc #f 1 0 1 2)))))
 
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
-(define-lex-abbrev alpha (:+ alphabetic "_"))
-(define-lex-abbrev alnum (:+ alphabetic numeric "_"))
+(define-lex-abbrev alpha (:or alphabetic "_"))
+(define-lex-abbrev alnum (:or alphabetic numeric "_"))
 (define-lex-abbrev ident (:seq alpha (:* alnum) (:? (char-set "!?"))))
 
 ; Should handle \\, \qq[...] and \<string-delimiter>.
@@ -103,7 +103,7 @@
    [digits (token 'INTEGER-LITERAL (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits) (:seq digits "."))
     (token 'REAL-LITERAL (string->number lexeme))]
-   [(:seq ident (:* (:or "'" "-") ident))
+   [(:seq ident (:* (:seq (:or "'" "-") ident)))
     (token 'IDENTIFIER (string->symbol lexeme))]
    [any-char (token 'UNEXPECTED-CHAR lexeme)]))
 
@@ -196,6 +196,19 @@
                         (srcloc 'string 1 5 6 1))
           (srcloc-token (token 'INTEGER-LITERAL 113)
                         (srcloc 'string 1 6 7 3))
+    )
+  )
+  (check-equal?
+    (lex "one-two--three")
+    ; kebab-case requires ISOLATED '-' or "'" characters
+    (list (srcloc-token (token 'IDENTIFIER 'one-two)
+                        (srcloc 'string 1 0 1 7))
+          (srcloc-token (token '- '-)
+                        (srcloc 'string 1 7 8 1))
+          (srcloc-token (token '- '-)
+                        (srcloc 'string 1 8 9 1))
+          (srcloc-token (token 'IDENTIFIER 'three)
+                        (srcloc 'string 1 9 10 5))
     )
   )
 )
