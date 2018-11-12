@@ -1,12 +1,7 @@
 #lang spectra
-// a line comment
-[
-  "JSON string", 42, {"a": null},
-  @$ 'null $@,
-  @$ (* 6 7) $@,
-  @$ (= 2 (+ 1 1)) $@,
-  @$ (list "array" "of" "strings") $@,
-  @$ (hash 'key-1 'null
-           'key-2 (even? 3)
-           'key-3 (hash 'subkey 21)) $@
-]
+x = 'q string';  // a line comment
+x = "qq-string"; /* a block comment */
+x = ｢raw string｣;
+x = 42;
+x = (x + y) * z / w;
+x = abc

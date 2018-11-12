@@ -65,13 +65,14 @@
 
 (define-lex-abbrev keywords
   (:or "fn" "var"
+       "say"
        "if" "while"
        "return"
        ))
 (define-lex-abbrev operators
-  (:or "=" ";" "+" "{" "}"
-       ":" "," "(" ")" "//" "/*" "*/"
-       "==" "!="
+  (:or "=" ";" "[" "]" "{" "}"
+       ":" "," "(" ")"
+       "==" "!=" "<" "<=" ">" ">="
        "+" "-" "/" "*"
        "++"))
 
@@ -80,10 +81,11 @@
    ["\n" (token 'NEWLINE lexeme)]
    [(:+ whitespace) (token 'WHITESPACE lexeme #:skip? #t)]
    [(from/stop-before "//" "\n") (token 'COMMENT lexeme #:skip? #t)]
+   [(from/to "/*" "*/") (token 'COMMENT lexeme #:skip? #t)]
    [(from/to "｢" "｣") ; no escapes, no interpolation
     (token 'RAW-STRING-LITERAL
            (substring lexeme 1 (sub1 (string-length lexeme))))]
-   [(:seq "｢"  (complement (:seq any-string "｣")))
+   [(:seq "｢" (:* (:~ "｣")))
     (token 'RAW-STRING-LITERAL-EOF
            (substring lexeme 1 (string-length lexeme)))]
    [q-str
@@ -99,7 +101,7 @@
     (token 'QQ-STRING-LITERAL-EOF
            (substring lexeme 1 (string-length lexeme)))]
    [keywords (token lexeme (string->symbol lexeme))]
-   [operators (token lexeme (string->symbol lexeme))]
+   [operators (token (string->symbol lexeme) (string->symbol lexeme))]
    [digits (token 'INTEGER-LITERAL (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits) (:seq digits "."))
     (token 'REAL-LITERAL (string->number lexeme))]
@@ -136,13 +138,15 @@
   (define (lex str)
     (apply-lexer spectra-lexer str))
   (check-equal?
-    (lex "'abc'\"lmnop\"''")
+    (lex "'abc'\"lmnop\"''｢uncooked｣")
     (list (srcloc-token (token 'Q-STRING-LITERAL "abc")
                         (srcloc 'string 1 0 1 5))
           (srcloc-token (token 'QQ-STRING-LITERAL "lmnop")
                         (srcloc 'string 1 5 6 7))
           (srcloc-token (token 'Q-STRING-LITERAL "")
                         (srcloc 'string 1 12 13 2))
+          (srcloc-token (token 'RAW-STRING-LITERAL "uncooked")
+                        (srcloc 'string 1 14 15 10))
           ))
   (check-equal?
     (lex "// nothing to see here\n")
@@ -151,7 +155,7 @@
           (srcloc-token (token 'NEWLINE "\n")
                         (srcloc 'string 1 22 23 1))))
   (check-equal?
-    (lex "42   3.14159 'sample string")
+    (lex "42   3.14159 x 'sample string")
     (list (srcloc-token (token 'INTEGER-LITERAL 42)
                         (srcloc 'string 1 0 1 2))
           (srcloc-token (token 'WHITESPACE "   " #:skip? #t)
@@ -160,8 +164,12 @@
                         (srcloc 'string 1 5 6 7))
           (srcloc-token (token 'WHITESPACE " " #:skip? #t)
                         (srcloc 'string 1 12 13 1))
+          (srcloc-token (token 'IDENTIFIER 'x)
+                        (srcloc 'string 1 13 14 1))
+          (srcloc-token (token 'WHITESPACE " " #:skip? #t)
+                        (srcloc 'string 1 14 15 1))
           (srcloc-token (token 'Q-STRING-LITERAL-EOF "sample string")
-                        (srcloc 'string 1 13 14 14))
+                        (srcloc 'string 1 15 16 14))
      )
   )
   (check-equal?
@@ -211,4 +219,12 @@
                         (srcloc 'string 1 9 10 5))
     )
   )
+  (check-equal?
+   (map (lambda (tok) (token-struct-type (srcloc-token-token tok)))
+        (lex  "=;()[]{}:,==!=<<=>>=+-*/++"))
+   '(|=| |;| |(| |)| |[| |]| |{| |}| |:| |,|
+         |==| |!=| |<| |<=| |>| |>=|
+         |+| |-| |*| |/| |++|)
+   )
+
 )

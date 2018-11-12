@@ -7,7 +7,7 @@
     (define (handle-query key default)
       (case key
         [(color-lexer)
-         (dynamic-require 'spectra/colorer 'color-spectra)]
+         (dynamic-require 'spectra/colorer 'spectra-colorer)]
         [(drracket:indentation)
          (dynamic-require 'spectra/indenter 'indent-spectra)]
         [(drracket:toolbar-buttons)
